@@ -127,6 +127,8 @@ def usuarios():
 
 @app.route('/emprestimos', methods=['GET'])
 def emprestimos():
+    # mostra os emprestimos
+    # select retorna as informaçoes que estao no banco (tabela Emprestimos)
     sql_emprestimos = select(Emprestimos)
     resultado_emprestimos = db_session.execute(sql_emprestimos).scalars()
     lista_emprestimos = []
@@ -139,7 +141,6 @@ def emprestimos():
 def editar_usuario(id):
 
     try:
-        # usuario_editado = db_session.execute(select(Usuarios).where(Usuarios.id_usuario == id)).scalar()
         usuario = select(Usuarios)
         # fazer a busca do banco, filtrando o id:
         usuario_editado = db_session.execute(usuario.filter_by(id_usuario=id)).scalar()
@@ -192,23 +193,24 @@ def editar_usuario(id):
 def editar_livro(id):
 
     try:
-        # scalar:  único valor
-
+        # fazer a busca do banco, filtrando o id:
         livro_editado = db_session.execute(select(Livros).where(Livros.id_livro == id)).scalar()
-
         if not livro_editado:
             return jsonify({
                 "erro": "O livro não foi encontrado!"
             })
 
         if request.method == 'PUT':
+            # atualizar e verificar se tem algo nos campos
             if (not request.form['titulo'] and not request.form['autor']
                     and not request.form['ISBN'] and not request.form['resumo']):
                 return jsonify({
+                    # se tiver nulo retorna :
                     "erro": "Os campos não devem ficar em branco!"
                 })
 
             else:
+                # o strip remover espaços em branco no início e no fim de uma string
                 livro_editado.titulo = request.form['titulo']
                 livro_editado.autor = request.form['autor']
                 livro_editado.ISBN = request.form['ISBN']
@@ -233,6 +235,7 @@ def livro_status():
 
     try:
         livro_emprestado = db_session.execute(
+            # o id livro do livro tem que ser compativel com o id que esta no emprestimo e no livro
             select(Livros).where(Livros.id_livro == Emprestimos.id_livro).distinct(Livros.ISBN)
         ).scalars()
 
@@ -246,6 +249,7 @@ def livro_status():
 
         print("Todos os livros", livrostatus)
 
+        # cria uma lista vazia
         lista_emprestados = []
         lista_disponiveis = []
         for livro in livro_emprestado:

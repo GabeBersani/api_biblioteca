@@ -1,12 +1,14 @@
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship, declarative_base
 
 engine = create_engine('sqlite:///biblioteca.sqlite3')
 
-db_session = scoped_session(sessionmaker(bind=engine))
+#db_session = scoped_session(sessionmaker(bind=engine))
+local_session = sessionmaker(bind=engine)
 
 Base = declarative_base()
-Base.query = db_session.query_property()
+#Base.query = db_session.query_property()
 
 class Usuarios(Base):
     __tablename__ = "Usuario"
@@ -18,13 +20,17 @@ class Usuarios(Base):
     def __repr__(self):
         return '<Produto: {} {} {} {}'.format(self.id_usuario, self.nome, self.CPF, self.endereco)
 
-    def save(self):
-        db_session.add(self)
-        db_session.commit()
-
-    def delete(self):
-        db_session.delete(self)
-        db_session.commit()
+    def save(self, db_session):
+        try:
+            db_session.add(self)
+            db_session.commit()
+        except SQLAlchemyError as e:
+            db_session.rollback()
+            raise e
+    #
+    # def delete(self):
+    #     db_session.delete(self)
+    #     db_session.commit()
 
     def serialize_usuario(self):
         dados_usuario = {
@@ -47,13 +53,17 @@ class Livros(Base):
     def __repr__(self):
         return '<Livro: {} {} {} {} {}'.format(self.id_livro, self.titulo, self.autor, self.ISBN, self.resumo)
 
-    def save(self):
-        db_session.add(self)
-        db_session.commit()
-
-    def delete(self):
-        db_session.delete(self)
-        db_session.commit()
+    def save(self, db_session):
+        try:
+            db_session.add(self)
+            db_session.commit()
+        except SQLAlchemyError as e:
+            db_session.rollback()
+            raise e
+    #
+    # def delete(self):
+    #     db_session.delete(self)
+    #     db_session.commit()
 
     def serialize_livro(self):
         dados_livro = {
@@ -82,13 +92,17 @@ class Emprestimos(Base):
         return '<Venda: {} {} {} {} {} '.format(self.id_emprestimo, self.data_emprestimo, self.data_devolucao,
                                                 self.livro_emprestado, self.usuario_emprestado)
 
-    def save(self):
-        db_session.add(self)
-        db_session.commit()
+    def save(self, db_session):
+        try:
+            db_session.add(self)
+            db_session.commit()
+        except SQLAlchemyError as e:
+            db_session.rollback()
+            raise e
 
-    def delete(self):
-        db_session.delete(self)
-        db_session.commit()
+    # def delete(self):
+    #     db_session.delete(self)
+    #     db_session.commit()
 
     def serialize_emprestimo(self):
         dados_emprestimo = {

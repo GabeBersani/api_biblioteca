@@ -5,9 +5,11 @@ from models import *
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret'
+
 # POST recebe a informação
 # GET mostra a informação
 # PUT atualiza a informação
+
 @app.route('/cadastro_livros', methods=['POST'])
 def cadastrar_livros_novos():
 
@@ -20,6 +22,7 @@ def cadastrar_livros_novos():
             resumo=str(request.form['resumo'])
         )
 
+
         form_cadastro_livro.save()
         # mensagem que aparece quando o livro é cadastrado
         return jsonify({
@@ -30,15 +33,16 @@ def cadastrar_livros_novos():
             'Resumo': form_cadastro_livro.resumo
         })
 
+
     except ValueError:
         # caso ocorra algum erro cai nessa mensagem
         return jsonify({
             'erro':'cadastro inválido!'
         })
 
+
 @app.route('/cadastro_usuario', methods=['POST'])
 def cadastrar_novos_usuarios():
-
     try:
         # cadastro de usucario com as informaçoes
         form_cadastro_usuario = Usuarios(
@@ -46,6 +50,7 @@ def cadastrar_novos_usuarios():
             CPF=str(request.form['CPF']),
             endereco=str(request.form['endereco'])
         )
+
 
         form_cadastro_usuario.save()
 
@@ -56,6 +61,7 @@ def cadastrar_novos_usuarios():
             'CPF': form_cadastro_usuario.CPF,
             'Endereco': form_cadastro_usuario.endereco,
         })
+
 
     except ValueError:
         return jsonify({
@@ -101,6 +107,7 @@ def historico_emprestimo():
         livros_emprestados.append(n.serialize_emprestimo())
     return jsonify({'livros_emprestados': livros_emprestados})
 
+
 @app.route('/livros', methods=['GET'])
 def livros():
     # mostra os livros cadastrados
@@ -113,6 +120,7 @@ def livros():
         lista_livros.append(n.serialize_livro())
     return jsonify({'lista_livros': lista_livros})
 
+
 @app.route('/usuarios', methods=['GET'])
 def usuarios():
     # mostra os usuarios cadastrados
@@ -124,6 +132,7 @@ def usuarios():
     for n in resultado_usuarios:
         lista_usuarios.append(n.serialize_usuario())
     return jsonify({'lista_usuarios': lista_usuarios})
+
 
 @app.route('/emprestimos', methods=['GET'])
 def emprestimos():
@@ -188,6 +197,7 @@ def editar_usuario(id):
         return jsonify({
             "erro": "Esse CPF já foi cadastrado!"
         })
+
 
 @app.route('/atualizar_livro/<id>', methods=['PUT'])
 def editar_livro(id):

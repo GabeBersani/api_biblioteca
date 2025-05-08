@@ -150,8 +150,8 @@ def novo_emprestimo():
             id_livro=int(dados['id_livro']),
             data_de_emprestimo=dados['data_de_emprestimo'],
             data_de_devolucao=dados['data_de_devolucao']
-
         )
+        form_cadastro_emprestimo.save(db_session)
         return jsonify({
             'Mensagem': 'Empréstimo realizado',
             'id_usuario': form_cadastro_emprestimo.id_usuario,
@@ -186,16 +186,19 @@ def historico_emprestimo():
     db_session = local_session()
     try:
         dados = request.get_json()
-    # o GET mostra as informaçoes que tem ou seja ira mostrar os livros emprestados
-    # select retorna as informaçoes que estao no banco (tabela emprestimo)
-    sql_historico_emprestimo = select(Emprestimos)
-    # o scalar retorna mais de um objeto
-    resultado_historico_emprestimo = db_session.execute(sql_historico_emprestimo).scalars()
-    livros_emprestados = []
-    for n in resultado_historico_emprestimo:
-        livros_emprestados.append(n.serialize_emprestimo())
-    return jsonify({'livros emprestados': livros_emprestados})
-
+        # o GET mostra as informaçoes que tem ou seja ira mostrar os livros emprestados
+        # select retorna as informaçoes que estao no banco (tabela emprestimo)
+        sql_historico_emprestimo = select(Emprestimos)
+        # o scalar retorna mais de um objeto
+        resultado_historico_emprestimo = db_session.execute(sql_historico_emprestimo).scalars()
+        livros_emprestados = []
+        for n in resultado_historico_emprestimo:
+            livros_emprestados.append(n.serialize_emprestimo())
+        return jsonify({'livros emprestados': livros_emprestados})
+    except Exception as e:
+        return jsonify({'erro': str(e)}), 400
+    finally:
+        db_session.close()
 
 @app.route('/livros', methods=['GET'])
 def livros():
@@ -219,15 +222,20 @@ def livros():
     db_session = local_session()
     try:
         dados = request.get_json()
-    # mostra os livros cadastrados
-    # select retorna as informaçoes que estao no banco (tabela livros)
-    sql_livros = select(Livros)
-    # o scalar retorna mais de um objeto
-    resultado_livros = db_session.execute(sql_livros).scalars()
-    lista_livros = []
-    for n in resultado_livros:
-        lista_livros.append(n.serialize_livro())
-    return jsonify({'lista_livros': lista_livros})
+        # mostra os livros cadastrados
+        # select retorna as informaçoes que estao no banco (tabela livros)
+        sql_livros = select(Livros)
+        # o scalar retorna mais de um objeto
+        resultado_livros = db_session.execute(sql_livros).scalars()
+        lista_livros = []
+        for n in resultado_livros:
+            lista_livros.append(n.serialize_livro())
+        return jsonify({'lista_livros': lista_livros})
+    except Exception as e:
+        return jsonify({'erro': str(e)}), 400
+    finally:
+        db_session.close()
+
 
 
 @app.route('/usuarios', methods=['GET'])
@@ -252,15 +260,19 @@ def usuarios():
     db_session = local_session()
     try:
         dados = request.get_json()
-    # mostra os usuarios cadastrados
-    # select retorna as informaçoes que estao no banco (tabela usuario)
-    sql_usuarios = select(Usuarios)
-    # o scalar retorna mais de um objeto
-    resultado_usuarios = db_session.execute(sql_usuarios).scalars()
-    lista_usuarios = []
-    for n in resultado_usuarios:
-        lista_usuarios.append(n.serialize_usuario())
-    return jsonify({'lista_usuarios': lista_usuarios})
+        # mostra os usuarios cadastrados
+        # select retorna as informaçoes que estao no banco (tabela usuario)
+        sql_usuarios = select(Usuarios)
+        # o scalar retorna mais de um objeto
+        resultado_usuarios = db_session.execute(sql_usuarios).scalars()
+        lista_usuarios = []
+        for n in resultado_usuarios:
+            lista_usuarios.append(n.serialize_usuario())
+        return jsonify({'lista_usuarios': lista_usuarios})
+    except Exception as e:
+        return jsonify({'erro': str(e)}), 400
+    finally:
+        db_session.close()
 
 
 @app.route('/emprestimos', methods=['GET'])
@@ -286,15 +298,18 @@ def emprestimos():
     db_session = local_session()
     try:
         dados = request.get_json()
-    # mostra os emprestimos
-    # select retorna as informaçoes que estao no banco (tabela Emprestimos)
-    sql_emprestimos = select(Emprestimos)
-    resultado_emprestimos = db_session.execute(sql_emprestimos).scalars()
-    lista_emprestimos = []
-    for n in resultado_emprestimos:
-        lista_emprestimos.append(n.serialize_emprestimo())
-    return jsonify({'lista_emprestimos' : lista_emprestimos})
-
+        # mostra os emprestimos
+        # select retorna as informaçoes que estao no banco (tabela Emprestimos)
+        sql_emprestimos = select(Emprestimos)
+        resultado_emprestimos = db_session.execute(sql_emprestimos).scalars()
+        lista_emprestimos = []
+        for n in resultado_emprestimos:
+            lista_emprestimos.append(n.serialize_emprestimo())
+        return jsonify({'lista_emprestimos' : lista_emprestimos})
+    except Exception as e:
+        return jsonify({'erro': str(e)}), 400
+    finally:
+        db_session.close()
 
 @app.route('/atualizar_usuario/<id>', methods=['PUT'])
 def editar_usuario(id):

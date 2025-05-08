@@ -26,7 +26,7 @@ class Usuarios(Base):
             db_session.commit()
         except SQLAlchemyError as e:
             db_session.rollback()
-            raise e
+            raise
     #
     # def delete(self):
     #     db_session.delete(self)

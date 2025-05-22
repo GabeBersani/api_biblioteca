@@ -91,20 +91,22 @@ def cadastrar_novos_usuarios():
     try:
         dados = request.get_json()
         # cadastro de usucario com as informaçoes
-        form_cadastro_usuario = Usuarios(
-            nome=str(dados['nome']),
-            CPF=str(dados['CPF']),
-            endereco=str(dados['endereco'])
-        )
+        # form_cadastro_usuario = Usuarios(
+        #     nome=str(dados['nome']),
+        #     CPF=str(dados['CPF']),
+        #     endereco=str(dados['endereco'])
+        # )
+        nome = dados['nome']
+        CPF = dados['CPF']
+        endereco = dados['endereco']
 
-
-        form_cadastro_usuario.save(db_session)
+        novo_usuario = Usuarios(nome=nome,CPF=CPF, endereco=endereco)
+        novo_usuario.save(db_session)
         return jsonify({
-            # mensagem que aparece quando é cadastrado corretamente
             'Mensagem': 'Usuário cadastrado!',
-            'Nome': form_cadastro_usuario.nome,
-            'CPF': form_cadastro_usuario.CPF,
-            'Endereco': form_cadastro_usuario.endereco,
+            'Nome': novo_usuario.nome,
+            'CPF': novo_usuario.CPF,
+            'Endereco': novo_usuario.endereco
         })
     except ValueError:
         return jsonify({
@@ -140,24 +142,15 @@ def novo_emprestimo():
     try:
         dados = request.get_json()
 
-        if not  "data_emprestimo" or not "data_devolucao" in dados:
-            return jsonify({'erro': "Campos obrigatórios"})
-        if dados["data_emprestimo"] or ["data_devolucao"] == "":
-            return jsonify({'erro': "O campo não pode estar vazio"})
-
-        form_cadastro_emprestimo = Emprestimos(
-            id_usuario=int(dados['id_usuario']),
-            id_livro=int(dados['id_livro']),
-            data_de_emprestimo=dados['data_de_emprestimo'],
-            data_de_devolucao=dados['data_de_devolucao']
-        )
-        form_cadastro_emprestimo.save(db_session)
+        emprestimo_novo = Emprestimos(data_de_emprestimo=dados["data_emprestimo"],
+                                      data_de_devolucao=dados["data_devolucao"],
+                                      livro_emprestado=dados["livro"],
+                                      usuario_emprestado=dados["usuario_emprestado"],
+                                      id_usuario=dados["id_usuario"],
+                                      id_livro=dados["id_livro"])
+        emprestimo_novo.save(db_session)
         return jsonify({
-            'Mensagem': 'Empréstimo realizado',
-            'id_usuario': form_cadastro_emprestimo.id_usuario,
-            'id_livro': form_cadastro_emprestimo.id_livro,
-            'data_de_emprestimo': form_cadastro_emprestimo.data_de_emprestimo,
-            'data_de_devolucao': form_cadastro_emprestimo.data_de_devolucao,
+            'Mensagem': 'Empréstimo realizado'
         })
 
     except ValueError:
@@ -185,7 +178,7 @@ def historico_emprestimo():
     """
     db_session = local_session()
     try:
-        dados = request.get_json()
+
         # o GET mostra as informaçoes que tem ou seja ira mostrar os livros emprestados
         # select retorna as informaçoes que estao no banco (tabela emprestimo)
         sql_historico_emprestimo = select(Emprestimos)
@@ -221,7 +214,7 @@ def livros():
 
     db_session = local_session()
     try:
-        dados = request.get_json()
+
         # mostra os livros cadastrados
         # select retorna as informaçoes que estao no banco (tabela livros)
         sql_livros = select(Livros)
@@ -259,7 +252,7 @@ def usuarios():
 
     db_session = local_session()
     try:
-        dados = request.get_json()
+
         # mostra os usuarios cadastrados
         # select retorna as informaçoes que estao no banco (tabela usuario)
         sql_usuarios = select(Usuarios)
@@ -297,7 +290,6 @@ def emprestimos():
        """
     db_session = local_session()
     try:
-        dados = request.get_json()
         # mostra os emprestimos
         # select retorna as informaçoes que estao no banco (tabela Emprestimos)
         sql_emprestimos = select(Emprestimos)
@@ -341,6 +333,7 @@ def editar_usuario(id):
                        ```json
                   """
     db_session = local_session()
+
     try:
         dados = request.get_json()
         usuario = select(Usuarios)
@@ -479,7 +472,7 @@ def livro_status():
 
     db_session = local_session()
     try:
-        dados = request.get_json()
+
 
         livro_emprestado = db_session.execute(
             # o id livro do livro tem que ser compativel com o id que esta no emprestimo e no livro
@@ -525,7 +518,3 @@ def livro_status():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-
-

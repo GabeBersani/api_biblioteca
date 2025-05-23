@@ -12,7 +12,7 @@ Base = declarative_base()
 
 class Usuarios(Base):
     __tablename__ = "Usuario"
-    id_usuario = Column(Integer, primary_key=True,autoincrement=True)
+    id_usuario = Column(Integer,primary_key=True, autoincrement=True)
     nome = Column(String(40), nullable=False, index=True)
     CPF = Column(String(11), nullable=False, index=True, unique=True)
     endereco = Column(String(50), nullable=False, index=True)
@@ -78,8 +78,8 @@ class Livros(Base):
 class Emprestimos(Base):
     __tablename__ = "Emprestimo"
     id_emprestimo = Column(Integer, primary_key=True, autoincrement=True)
-    data_de_emprestimo = Column(String(8), nullable=False, index=True)
-    data_de_devolucao = Column(String(8), nullable=False, index=True)
+    data_emprestimo = Column(String(10), nullable=False, index=True)
+    data_devolucao = Column(String(10), nullable=False, index=True)
     livro_emprestado = Column(String(50), nullable=False, index=True)
     usuario_emprestado = Column(String(50), nullable=False, index=True)
     id_usuario = Column(Integer, ForeignKey('Usuario.id_usuario'))

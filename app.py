@@ -142,8 +142,8 @@ def novo_emprestimo():
     try:
         dados = request.get_json()
 
-        emprestimo_novo = Emprestimos(data_de_emprestimo=dados["data_emprestimo"],
-                                      data_de_devolucao=dados["data_devolucao"],
+        emprestimo_novo = Emprestimos(data_emprestimo=dados["data_emprestimo"],
+                                      data_devolucao=dados["data_devolucao"],
                                       livro_emprestado=dados["livro"],
                                       usuario_emprestado=dados["usuario_emprestado"],
                                       id_usuario=dados["id_usuario"],
@@ -371,7 +371,7 @@ def editar_usuario(id):
                 usuario_editado.CPF = dados['CPF'].strip()
                 usuario_editado.endereco = dados['endereco']
 
-                usuario_editado.save()
+                usuario_editado.save(db_session)
 
                 return jsonify({
                     "nome": usuario_editado.nome,

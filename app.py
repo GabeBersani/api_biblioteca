@@ -10,8 +10,6 @@ app.config['SECRET_KEY'] = 'secret'
 def shutdown_session(exception=None):
     db_session.remove()
 
-# --- Livro Endpoints ---
-
 @app.route('/livros', methods=['GET'])
 def get_livros():
     """
@@ -137,13 +135,13 @@ def editar_livro(id):
     ```json
     {
         "id_livro": 1,
-        "titulo": "Novo Título",
-        "autor": "Novo Autor",
-        "ISBN": "987-654-321-0",
+        "titulo": "novo Título",
+        "autor": "novo Autor",
+        "ISBN": "11111111111",
         "resumo": "Novo resumo."
     }
     ```
-    Status: 200 OK
+    Status: 200
 
     Erros possíveis (JSON):
     ```json
@@ -249,7 +247,7 @@ def livro_status():
     except Exception as e:
         return jsonify({'erro': str(e)}), 400
 
-# --- Usuário Endpoints ---
+
 
 @app.route('/usuarios', methods=['GET'])
 def get_usuarios():
@@ -418,7 +416,6 @@ def editar_usuario(id):
     except Exception as e:
         return jsonify({'erro': str(e)}), 400
 
-# --- Empréstimo Endpoints ---
 
 @app.route('/emprestimos', methods=['GET'])
 def get_emprestimos():

@@ -3,7 +3,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker, relationship
 from sqlalchemy.orm import sessionmaker, declarative_base
 from werkzeug.security import generate_password_hash, check_password_hash
 
-engine = create_engine('sqlite:///base_biblioteca.sqlite3')
+engine = create_engine('sqlite:///Biblioteca')
 db_session = scoped_session(sessionmaker(bind=engine))
 Base = declarative_base()
 Base.query = db_session.query_property()
@@ -174,7 +174,6 @@ class Emprestimo(Base):
 
 def init_db():
     Base.metadata.create_all(bind=engine)
-
 if __name__ == '__main__':
     init_db()
 

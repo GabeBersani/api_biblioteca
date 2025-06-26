@@ -1,13 +1,9 @@
 
-# @app.teardown_appcontext
-# def shutdown_session(exception=None):
-#     db_session.remove()
-#
 import sqlalchemy
+from dateutil.relativedelta import relativedelta
 from flask import Flask, jsonify, redirect, request
 from flask_pydantic_spec import FlaskPydanticSpec
 from datetime import date
-# from dateutil.relativedelta import relativedelta
 from functools import wraps
 from models import Livro, Usuario, Emprestimo, db_session, User
 from datetime import date
@@ -596,7 +592,8 @@ def cadastrar_emprestimo():
     """
     dados = request.get_json()
     try:
-        if not all([dados.get('id_usuario'), dados.get('id_livro'), dados.get('data_emprestimo'), dados.get('data_devolucao')]):
+        if not all([dados.get('id_usuario'),
+                    dados.get('id_livro'),]):
             return jsonify({'erro': "Campos obrigatórios (id_usuario, id_livro, data_emprestimo, data_devolucao) estão ausentes"}), 400
 
         usuario_existente = db_session.execute(select(Usuario).where(Usuario.id_usuario == dados['id_usuario'])).scalar()
@@ -606,12 +603,13 @@ def cadastrar_emprestimo():
             return jsonify({'erro': 'Usuário não encontrado'}), 404
         if not livro_existente:
             return jsonify({'erro': 'Livro não encontrado'}), 404
-
+        data_emprestimo = date.today()
+        data_de_devolucao = data_emprestimo + relativedelta(weeks=4)
         novo_emprestimo = Emprestimo(
             id_usuario=dados['id_usuario'],
             id_livro=dados['id_livro'],
-            data_emprestimo=dados['data_emprestimo'],
-            data_devolucao=dados['data_devolucao']
+            data_emprestimo=str(data_emprestimo),
+            data_devolucao=str(data_de_devolucao),
         )
         novo_emprestimo.save()
         emprestimo_response = novo_emprestimo.serialize_emprestimo()
@@ -619,7 +617,19 @@ def cadastrar_emprestimo():
         return jsonify(emprestimo_response), 201
     except Exception as e:
         return jsonify({'erro': str(e)}), 400
-
+@app.route("/devolver_livro", methods=["POST"])
+def devolver_livro():
+    try:
+        print('teste')
+        dados = request.get_json()
+        id_livro = dados['id_livro']
+        emprestimo_encontrado = db_session.execute(select(Emprestimo).filter_by(id_livro=id_livro)).scalar()
+        if not emprestimo_encontrado:
+            return jsonify({'error':'emprestimo nao encontrado'}), 404
+        emprestimo_encontrado.delete()
+        return jsonify({'id_emprestimo': 'livro devolvido com sucesso'}), 200
+    except Exception as e:
+        return jsonify({'erro': str(e)}), 500
 @app.route('/consulta_historico_emprestimo', methods=['GET'])
 def historico_emprestimo():
     """

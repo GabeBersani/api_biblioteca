@@ -1,14 +1,93 @@
+
+# @app.teardown_appcontext
+# def shutdown_session(exception=None):
+#     db_session.remove()
+#
 import sqlalchemy
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, redirect, request
+from flask_pydantic_spec import FlaskPydanticSpec
+from datetime import date
+# from dateutil.relativedelta import relativedelta
+from functools import wraps
+from models import Livro, Usuario, Emprestimo, db_session, User
+from datetime import date
+# from dateutil.relativedelta import relativedelta
 from sqlalchemy import select
-from models import Livro, Usuario, Emprestimo, db_session
-
+from flask_jwt_extended import get_jwt_identity, JWTManager, create_access_token, jwt_required
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret'
+spec = FlaskPydanticSpec('Flask',
+                         title='Flask API',
+                         version='1.0.0')
+spec.register(app)
+app.config['JWT_SECRET_KEY'] = 'senha'
+jwt = JWTManager(app)
 
-@app.teardown_appcontext
-def shutdown_session(exception=None):
-    db_session.remove()
+def admin_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        current_user = get_jwt_identity()
+        print(current_user)
+
+        try:
+            user = db_session.execute(select(User).where(User.email == current_user)).scalar()
+            print(user)
+            if user and user.papel == "gerente":
+                return fn(*args, **kwargs)
+
+            return jsonify({'error':'usuario não possui permissão de administrador'})
+        finally:
+            db_session.close()
+    return wrapper
+
+@app.route('/')
+def index():
+    return redirect('/consultar_livros')
+
+
+@app.route('/cadastrar_users', methods=['POST'])
+def cadastrar_user():
+    dados = request.get_json()
+    nome = dados['nome']
+    email = dados['email']
+    papel = dados.get('papel', 'usuario')
+    senha = dados['senha']
+
+    if not nome or not email or not senha:
+        return jsonify({"msg": "Nome de usuário e senha são obrigatórios"}), 400
+    try:
+        # Verificar se o usuário já existe
+        user_check = select(User).where(User.email == email)
+        usuario_existente = db_session.execute(user_check).scalar()
+
+        if usuario_existente:
+            return jsonify({"mensagem": "Usuário já existe!!!"}), 400
+
+        novo_usuario = User(nome=nome, email=email, papel=papel)
+        novo_usuario.set_senha_hash(senha)
+        db_session.add(novo_usuario)
+        db_session.commit()
+
+        user_id = novo_usuario.id
+        return jsonify({"sucesso": user_id}), 201
+    except Exception as e:
+        db_session.rollback()
+        return jsonify({"error": {str(e)}}), 500
+    finally:
+        db_session.close()
+
+@app.route('/login', methods=['POST'])
+def login():
+    dados = request.get_json()
+    email = dados['email']
+    senha = dados['senha']
+    try:
+        user = db_session.execute(select(User).where(User.email == email)).scalar()
+        if user and user.check_password(senha):
+            access_token = create_access_token(identity=email)
+            return jsonify(access_token=access_token)
+        return jsonify({'error': 'Senha incorreto'})
+    finally:
+        db_session.close()
 
 @app.route('/livros', methods=['GET'])
 def get_livros():
@@ -24,10 +103,10 @@ def get_livros():
         "livros": [
             {
                 "id_livro": 1,
-                "titulo": "O Senhor dos Anéis",
+                "titulo": "titulooooo",
                 "autor": " Gabriele",
                 "ISBN": "9788533302273",
-                "resumo": "Uma aventura épica..."
+                "resumo": "lalala"
             }
         ]
     }
@@ -65,8 +144,8 @@ def cadastrar_livro():
     {
         "titulo": "Nome do Livro",
         "autor": "Nome do Autor",
-        "isbn": "123-456-789-0",
-        "resumo": "Um breve resumo do livro."
+        "isbn": "11111111111",
+        "resumo": "Resumoo"
     }
     ```
 
@@ -76,8 +155,8 @@ def cadastrar_livro():
         "id_livro": 1,
         "titulo": "Nome do Livro",
         "autor": "Nome do Autor",
-        "ISBN": "123-456-789-0",
-        "resumo": "Um breve resumo do livro."
+        "ISBN": "11111111111",
+        "resumo": "Resumoo"
     }
     ```
     Status: 201 Created
@@ -125,8 +204,8 @@ def editar_livro(id):
     {
         "titulo": "Novo Título",
         "autor": "Novo Autor",
-        "isbn": "987-654-321-0",
-        "resumo": "Novo resumo."
+        "isbn": "11447879999",
+        "resumo": "Novo resumo"
     }
     ```
     (Envie apenas os campos que deseja atualizar)
@@ -201,7 +280,7 @@ def livro_status():
                 "id_livro": 1,
                 "titulo": "Livro Emprestado 1",
                 "autor": "Autor 1",
-                "ISBN": "123-456",
+                "ISBN": "11441778745",
                 "resumo": "Resumo 1"
             }
         ],
@@ -210,8 +289,8 @@ def livro_status():
                 "id_livro": 2,
                 "titulo": "Livro Disponível 1",
                 "autor": "Autor 2",
-                "ISBN": "789-012",
-                "resumo": "Resumo 2"
+                "ISBN": "111111147778",
+                "resumo": "Resumooooooooooooo 2"
             }
         ]
     }
@@ -264,8 +343,8 @@ def get_usuarios():
             {
                 "id_usuario": 1,
                 "nome": "João Silva",
-                "CPF": "123.456.789-00",
-                "endereco": "Rua A, 123"
+                "CPF": "114444447777",
+                "endereco": "Ruaaaaaaaaaaaaaaaaaaaa",
             }
         ]
     }
@@ -301,8 +380,8 @@ def cadastrar_usuario():
     ```json
     {
         "nome": "Maria Souza",
-        "cpf": "987.654.321-11",
-        "endereco": "Avenida B, 456"
+        "cpf": "11114444787",
+        "endereco": "casa luciano professor"
     }
     ```
 
@@ -360,8 +439,8 @@ def editar_usuario(id):
     ```json
     {
         "nome": "Novo Nome do Usuário",
-        "cpf": "111.222.333-44",
-        "endereco": "Nova Rua, 789"
+        "cpf": "14787878745",
+        "endereco": "nova rua"
     }
     ```
     (Envie apenas os campos que deseja atualizar)
@@ -371,8 +450,8 @@ def editar_usuario(id):
     {
         "id_usuario": 1,
         "nome": "Novo Nome do Usuário",
-        "CPF": "111.222.333-44",
-        "endereco": "Nova Rua, 789"
+        "CPF": "114114541541",
+        "endereco": "Nova Rua"
     }
     ```
     Status: 200 OK
@@ -472,8 +551,8 @@ def cadastrar_emprestimo():
     {
         "id_usuario": 1,
         "id_livro": 2,
-        "data_emprestimo": "YYYY-MM-DD",
-        "data_devolucao": "YYYY-MM-DD"
+        "data_emprestimo": "xx-xx-xx",
+        "data_devolucao": "xx-xx-xx",
     }
     ```
 
@@ -483,8 +562,8 @@ def cadastrar_emprestimo():
         "id_emprestimo": 1,
         "id_usuario": 1,
         "id_livro": 2,
-        "data_emprestimo": "YYYY-MM-DD",
-        "data_devolucao": "YYYY-MM-DD"
+        "data_emprestimo": "xx-xx-xx",
+        "data_devolucao": "xx-xx-xx",
     }
     ```
     Status: 201 Created
@@ -557,8 +636,8 @@ def historico_emprestimo():
                 "id_emprestimo": 1,
                 "id_usuario": 1,
                 "id_livro": 1,
-                "data_emprestimo": "2024-01-01",
-                "data_devolucao": "2024-01-15"
+                "data_emprestimo": "01-01-2025",
+                "data_devolucao": "01-15-2025"
             }
         ]
     }

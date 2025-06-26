@@ -1,10 +1,36 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
-from sqlalchemy.orm import scoped_session, sessionmaker, relationship, declarative_base
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Date, DateTime, Float
+from sqlalchemy.orm import scoped_session, sessionmaker, relationship
+from sqlalchemy.orm import sessionmaker, declarative_base
+from werkzeug.security import generate_password_hash, check_password_hash
 
 engine = create_engine('sqlite:///base_biblioteca.sqlite3')
 db_session = scoped_session(sessionmaker(bind=engine))
 Base = declarative_base()
 Base.query = db_session.query_property()
+
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True)
+    nome = Column(String, nullable=False)
+    email = Column(String, nullable=False)
+    senha_hash = Column(String, nullable=False) #senha com proteção
+    papel = Column(String, nullable=False) #cargo das pessoas
+
+    def set_senha_hash(self, senha):
+        self.senha_hash = generate_password_hash(senha)
+
+    def check_password(self, senha):
+        return check_password_hash(self.senha_hash, senha)
+
+    def serialize(self):
+        dados = {
+            'id': self.id,
+            'nome': self.nome,
+            'email': self.email,
+            'papel': self.papel,
+        }
+        return dados
+
 
 class Livro(Base):
     __tablename__ = 'LIVROS'
@@ -114,6 +140,37 @@ class Emprestimo(Base):
             'usuario': self.id_usuario,
             'livro': self.id_livro,
         }
+
+    class UsuarioGeral(Base):
+        __tablename__ = 'usuarios_exemplo'
+        id = Column(Integer, primary_key=True)
+        nome = Column(String, nullable=False)
+        email = Column(String, nullable=False)
+        senha_hash = Column(String, nullable=False)
+        papel = Column(String, nullable=False)
+
+        def set_senha_hash(self, senha):
+            self.senha_hash = generate_password_hash(senha)
+
+        def check_password_hash(self, senha):
+            return check_password_hash(self.senha_hash, senha)
+
+        def serialize(self):
+            dados = {
+                'id': self.id,
+                'nome': self.nome,
+                'email': self.email,
+                'papel': self.papel,  # papel não é obrigatorio
+            }
+            return dados
+
+    class NotasExemplo(Base):
+        __tablename__ = 'notas_exemplo'
+        id = Column(Integer, primary_key=True)
+        conteudo = Column(String, nullable=False)
+        # user_id = Column(Integer, ForeignKey('usuarios_exemplo.id')) # Poderia ter para associar
+
+    Base.metadata.create_all(engine)  # Cria as tabelas
 
 def init_db():
     Base.metadata.create_all(bind=engine)
